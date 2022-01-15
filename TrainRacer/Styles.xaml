@@ -1,0 +1,18 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ControlTemplate TargetType="ProgressBar" x:Key="TrainProgressBarStyle">
+        <Canvas>
+            <ProgressBar x:Name="TrainProgress"
+                         Width="{TemplateBinding Width}"
+                         Height="{TemplateBinding Height}"
+                         Value="{TemplateBinding Value}"
+                         Minimum="{TemplateBinding Minimum}"
+                         Maximum="{TemplateBinding Maximum}"/>
+            <Image Source="{Binding Name}" 
+                   Canvas.Left="{TemplateBinding Value}"
+                   Width="100"
+                   Height="100">
+            </Image>
+        </Canvas>
+    </ControlTemplate>
+</ResourceDictionary>
