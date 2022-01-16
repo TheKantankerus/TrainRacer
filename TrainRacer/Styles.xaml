@@ -23,6 +23,7 @@
     </Style>
     <Style TargetType="Slider" x:Key="RaceTrackSliderStyle">
         <Setter Property="Height" Value="40"/>
+        <Setter Property="TickPlacement" Value="Both"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Slider">
@@ -43,9 +44,32 @@
                           Grid.Row="1" Grid.Column="1"
                            Width="{TemplateBinding Width}"
                            Height="{TemplateBinding Height}"
-                           Background="GreenYellow"
+                           Background="Green"
                            HorizontalAlignment="Stretch"
                            VerticalAlignment="Center" />
+                        <Border Grid.Row="1"
+                                Grid.Column="1"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Center"
+                                Background="DarkGray"
+                                Height="20"/>
+                        <Border Grid.Row="1"
+                                Grid.Column="1"
+                                BorderBrush="Black"
+                                HorizontalAlignment="Stretch"
+                                VerticalAlignment="Center"
+                                Background="LightGray"
+                                BorderThickness="1"
+                                Height="15"/>
+                        <TickBar Name="PART_TickBar"
+                                 HorizontalAlignment="Stretch"
+                                 VerticalAlignment="Center"
+                                 Grid.Row="0" 
+                                 Grid.RowSpan="3"
+                                 Grid.Column="1"
+                                 Height="30"
+                                 Fill="Black"                                 
+                                 Margin="0,-8,0,0"/>
                         <Track Name="PART_Track"
                               HorizontalAlignment="Stretch"
                               VerticalAlignment="Center"

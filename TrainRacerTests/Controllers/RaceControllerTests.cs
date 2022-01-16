@@ -21,10 +21,13 @@ namespace TrainRacerTests.Controllers
             var mockTrack = new Mock<ITrack>();
             mockTrack.SetupGet(m => m.Length).Returns(5);
 
+            var mockDriver = new Mock<IDriver>();
+            mockDriver.Setup(m => m.DriveTrain(It.IsAny<ITrain>(), It.IsAny<double>()));
+
             List<RaceResult> results = new();
             ManualResetEvent resetEvent = new(false);
 
-            var controller = new RaceController();
+            var controller = new RaceController(new IDriver[] { mockDriver.Object });
 
             controller.RaceUpdated += (sender, args) =>
             {

@@ -3,7 +3,7 @@ using TrainRacer.Contract;
 
 namespace TrainRacer.Core.Models.Trains;
 
-public abstract class BaseTrain : BindableBase, ITrain
+public abstract class BaseTrain : BindableBase, ITrain, ISelectable
 {
     public abstract double TopSpeed
     {
@@ -37,4 +37,12 @@ public abstract class BaseTrain : BindableBase, ITrain
         set => SetProperty(ref _distanceTraveled, value);
     }
     private double _distanceTraveled;
+
+    public bool IsSelected
+    {
+        get => _isSelected;
+        set => SetProperty(ref _isSelected, value);
+    }
+    private bool _isSelected;
+
 }

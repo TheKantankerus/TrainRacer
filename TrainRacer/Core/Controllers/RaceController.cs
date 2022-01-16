@@ -12,13 +12,19 @@ public class RaceController : IRaceController
 {
     private readonly Stopwatch _stopwatch = new();
     private readonly List<RaceResult> _results = new();
+    private readonly IEnumerable<IDriver> _availableDrivers;
     private ITrack? _track;
     private int _trainCount;
 
+    public RaceController(IEnumerable<IDriver> availableDrivers)
+    {
+        _availableDrivers = availableDrivers;
+    }
+
     public TimeSpan TimeElapsed => TimeSpan.FromMilliseconds(_stopwatch.ElapsedMilliseconds);
 
-    public event Action RaceComplete;
-    public event EventHandler<RaceUpdatedEventArgs> RaceUpdated;
+    public event Action? RaceComplete;
+    public event EventHandler<RaceUpdatedEventArgs>? RaceUpdated;
 
     public void StartRace(IEnumerable<ITrain> trains, ITrack track)
     {
@@ -28,7 +34,7 @@ public class RaceController : IRaceController
         _stopwatch.Restart();
         foreach (var train in trains)
         {
-            var driverService = new TrainDriverService(train, 100);
+            var driverService = new TrainDriverService(train, 100, _availableDrivers);
 
             driverService.DistanceUpdated += OnDistanceUpdated;
 
@@ -38,7 +44,8 @@ public class RaceController : IRaceController
 
     private void OnDistanceUpdated(object? sender, DistanceUpdatedEventArgs e)
     {
-        if (IsTrainFinished(e.Train) &&
+        if (e.Train != null &&
+            IsTrainFinished(e.Train) &&
             sender is ITrainDriverService driverService)
         {
             driverService.Dispose();

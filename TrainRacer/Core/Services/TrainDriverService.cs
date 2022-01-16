@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Timers;
 using TrainRacer.Contract;
 using TrainRacer.Contract.Events;
@@ -8,22 +10,36 @@ namespace TrainRacer.Core.Services;
 
 public class TrainDriverService : ITrainDriverService
 {
-    private readonly ITrain _train;
     private readonly Timer _trainTimer;
 
-    public TrainDriverService(ITrain train, double intervalMilliseconds)
+    public TrainDriverService(ITrain train, double intervalMilliseconds, IEnumerable<IDriver> availableDrivers)
     {
-        _train = train;
+        if (train == null)
+        {
+            throw new ArgumentException("No train provided.");
+        }
+
+        if (availableDrivers?.Any() != true)
+        {
+            throw new ArgumentException("No drivers provided.");
+        }
+
         _trainTimer = new Timer(intervalMilliseconds);
-        _trainTimer.Elapsed += (s, e) => UpdateDistance();
+
+        var driver = availableDrivers.GetRandom();
+
+        _trainTimer.Elapsed += (s, e) =>
+        {
+            driver?.DriveTrain(train, intervalMilliseconds);
+            DistanceUpdated?.Invoke(this, new DistanceUpdatedEventArgs(train));
+        };
     }
 
     public event EventHandler<DistanceUpdatedEventArgs>? DistanceUpdated;
 
     public void Dispose()
     {
-        StopTrain();
-        _trainTimer.Elapsed -= (s, e) => UpdateDistance();
+        _trainTimer.Dispose();
     }
 
     public void StartTrain()
@@ -34,12 +50,6 @@ public class TrainDriverService : ITrainDriverService
     public void StopTrain()
     {
         _trainTimer.Stop();
-    }
-
-    private void UpdateDistance()
-    {
-        _train.Accelerate(_trainTimer.Interval).Travel(_trainTimer.Interval);
-        DistanceUpdated?.Invoke(this, new DistanceUpdatedEventArgs { Train = _train });
     }
 }
 

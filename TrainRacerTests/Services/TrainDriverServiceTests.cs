@@ -14,8 +14,9 @@ namespace TrainRacerTests.Services
         {
             //Arrange
             var mockTrain = new Mock<ITrain>();
+            var mockDriver = new Mock<IDriver>();
 
-            var controller = new TrainDriverService(mockTrain.Object, 100);
+            var controller = new TrainDriverService(mockTrain.Object, 100, new IDriver[] { mockDriver.Object });
 
             int updateCount = 0;
 
@@ -32,6 +33,25 @@ namespace TrainRacerTests.Services
 
             //Assert
             Assert.AreEqual(5, updateCount);
+        }
+
+        [TestMethod]
+        public void DriverCalledAfterStart()
+        {
+            //Arrange
+            var mockTrain = new Mock<ITrain>();
+            var mockDriver = new Mock<IDriver>();
+            mockDriver.Setup(m => m.DriveTrain(It.IsAny<ITrain>(), It.IsAny<double>()));
+
+            var controller = new TrainDriverService(mockTrain.Object, 100, new IDriver[] { mockDriver.Object });
+
+            //Act
+            controller.StartTrain();
+
+            Thread.Sleep(550);
+
+            //Assert
+            mockDriver.Verify(m => m.DriveTrain(mockTrain.Object, 100), Times.Exactly(5));
         }
     }
 }
