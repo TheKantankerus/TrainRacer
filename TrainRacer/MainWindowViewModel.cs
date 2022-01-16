@@ -1,7 +1,10 @@
-﻿using Microsoft.Xaml.Behaviors.Core;
+﻿using Prism.Commands;
 using Prism.Mvvm;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Linq;
+using System.Windows;
 using TrainRacer.Contract;
 
 namespace TrainRacer
@@ -9,28 +12,54 @@ namespace TrainRacer
     public class MainWindowViewModel : BindableBase
     {
         private readonly IRaceController _raceController;
-        private readonly ITrainController _trainController;
+        private readonly bool _isRaceReset = true;
 
         public MainWindowViewModel(IRaceController raceController,
-                             ITrainController trainController)
+                             IEnumerable<ITrain> availableTrains,
+                             IEnumerable<ITrack> availableTracks)
         {
             _raceController = raceController;
             _raceController.RaceComplete += OnRaceCompleted;
-            _trainController = trainController;
-            _trainController.DistanceUpdated += OnDistanceUpdated;
+            _raceController.RaceUpdated += OnRaceUpdated;
 
-            StartRaceCommand = new ActionCommand(StartRace);
+            StartRaceCommand = new DelegateCommand(StartRace, () => !_isRaceRunning && _isRaceReset);
+            ResetRaceCommand = new DelegateCommand(ResetRace, () => RaceResults.Any());
+            TrainSelectedCommand = new DelegateCommand<ITrain>(TrainSelected);
+            TrainDeselectedCommand = new DelegateCommand<ITrain>(TrainDeselected);
+
+            AvailableTrains = availableTrains;
+            AvailableTracks.AddRange(availableTracks);
+
+            SelectedTrains.CollectionChanged += OnSelectedTrainsChanged;
+
+            //TODO: Remove, these are just for debugging
+            SelectedTrack = availableTracks.FirstOrDefault();
         }
 
-        public ActionCommand StartRaceCommand
+        public DelegateCommand StartRaceCommand
         {
             get;
         }
 
-        public ObservableCollection<ITrain> AvailableTrains
+        public DelegateCommand ResetRaceCommand
         {
             get;
-        } = new();
+        }
+
+        public DelegateCommand<ITrain> TrainSelectedCommand
+        {
+            get;
+        }
+
+        public DelegateCommand<ITrain> TrainDeselectedCommand
+        {
+            get;
+        }
+
+        public IEnumerable<ITrain> AvailableTrains
+        {
+            get;
+        }
 
         public ObservableCollection<ITrain> SelectedTrains
         {
@@ -51,21 +80,61 @@ namespace TrainRacer
         {
             get; set;
         }
+
         public string ErrorMessage
         {
             get => _errorMessage;
-            private set => SetProperty(ref _errorMessage, value);
+            private set
+            {
+                SetProperty(ref _errorMessage, value);
+                RaisePropertyChanged(nameof(IsErrorMessageVisible));
+            }
         }
-        private string _errorMessage;
+        private string _errorMessage = string.Empty;
 
-        private bool _canRace;
+        public bool IsErrorMessageVisible => !string.IsNullOrEmpty(ErrorMessage);
 
-        public bool CanRace
+        public bool IsRaceCompleted
         {
-            get => _canRace;
-            private set => SetProperty(ref _canRace, value);
+            get => _isRaceCompleted;
+            private set
+            {
+                SetProperty(ref _isRaceCompleted, value);
+                IsRaceRunning = !_isRaceCompleted;
+            }
+        }
+        private bool _isRaceCompleted;
+
+        public bool IsRaceRunning
+        {
+            get => _isRaceRunning;
+            private set => SetProperty(ref _isRaceRunning, value);
+        }
+        private bool _isRaceRunning = false;
+
+        #region Execute Command Methods
+
+        private void ResetRace()
+        {
+            SelectedTrains.Clear();
+            RaceResults.Clear();
+            foreach (ITrain? train in AvailableTrains)
+            {
+                train.DistanceTraveled = 0;
+            }
+            StartRaceCommand.RaiseCanExecuteChanged();
+            ResetRaceCommand.RaiseCanExecuteChanged();
         }
 
+        private void TrainDeselected(ITrain train)
+        {
+            SelectedTrains.Remove(train);
+        }
+
+        private void TrainSelected(ITrain train)
+        {
+            SelectedTrains.Add(train);
+        }
         private void StartRace()
         {
             if (!SelectedTrains.Any())
@@ -79,19 +148,28 @@ namespace TrainRacer
                 return;
             }
             _raceController.StartRace(SelectedTrains, SelectedTrack);
-            CanRace = false;
+            IsRaceCompleted = false;
+
+            StartRaceCommand.RaiseCanExecuteChanged();
         }
 
-        private void OnRaceCompleted(object? sender, Events.RaceCompleteEventArgs e)
+        #endregion
+
+        private void OnRaceCompleted()
         {
-            CanRace = true;
-            RaceResults.Clear();
-            RaceResults.AddRange(e.Results);
+            IsRaceCompleted = true;
+
+            ResetRaceCommand.RaiseCanExecuteChanged();
         }
 
-        private void OnDistanceUpdated(object? sender, Events.DistanceUpdatedEventArgs e)
+        private void OnRaceUpdated(object? sender, Contract.Events.RaceUpdatedEventArgs e)
         {
-            throw new System.NotImplementedException();
+            Application.Current.Dispatcher.Invoke(() => RaceResults.Add(e.RaceResult));
+        }
+
+        private void OnSelectedTrainsChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            ErrorMessage = string.Empty;
         }
     }
 }

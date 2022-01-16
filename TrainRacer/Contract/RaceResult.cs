@@ -2,14 +2,14 @@
 
 namespace TrainRacer.Contract
 {
-    public struct RaceResult
+    public record struct RaceResult
     {
         public ITrain Train
         {
             get; init;
         }
 
-        public TimeSpan FinishTime
+        public TimeSpan? FinishTime
         {
             get; init;
         }

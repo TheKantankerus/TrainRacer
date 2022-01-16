@@ -1,4 +1,6 @@
-﻿using System.Windows;
+﻿using System.Linq;
+using System.Windows;
+using TrainRacer.Contract;
 
 namespace TrainRacer
 {
@@ -10,6 +12,14 @@ namespace TrainRacer
         public MainWindow()
         {
             InitializeComponent();
+        }
+
+        private void ResetRaceClick(object sender, RoutedEventArgs e)
+        {
+            foreach (ISelectable? item in AvailableTrainsListView.Items.OfType<ISelectable>())
+            {
+                item.IsSelected = false;
+            }
         }
     }
 }
