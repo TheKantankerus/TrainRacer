@@ -17,6 +17,7 @@
             <conv:TrainImageConverter x:Key="TrainImageConverter"/>
             <conv:TrimWidthConverter x:Key="TrimWidthConverter"/>
             <conv:TrackLengthTickConverter x:Key="TrackLengthTickConverter"/>
+            <conv:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
             <CollectionViewSource x:Key="SortedTrains" Source="{Binding AvailableTrains}">
                 <CollectionViewSource.SortDescriptions>
                     <componentmodel:SortDescription PropertyName="Name" Direction="Ascending"/>
@@ -43,7 +44,8 @@
                   Grid.Column="0"
                   Margin="5"
                   Name="AvailableTrainsListView"
-                  HorizontalAlignment="Center">
+                  HorizontalAlignment="Center"
+                  IsEnabled="{Binding IsRaceRunning, Converter={StaticResource InverseBooleanConverter}}">
             <ListView.ItemTemplate>
                 <DataTemplate>
                     <ToggleButton Style="{DynamicResource TrainSelectionToggleButtonStyle}"

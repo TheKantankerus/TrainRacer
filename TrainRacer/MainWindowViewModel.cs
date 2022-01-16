@@ -12,7 +12,6 @@ namespace TrainRacer
     public class MainWindowViewModel : BindableBase
     {
         private readonly IRaceController _raceController;
-        private bool _isRaceRunning = false;
         private readonly bool _isRaceReset = true;
 
         public MainWindowViewModel(IRaceController raceController,
@@ -101,10 +100,17 @@ namespace TrainRacer
             private set
             {
                 SetProperty(ref _isRaceCompleted, value);
-                _isRaceRunning = !_isRaceCompleted;
+                IsRaceRunning = !_isRaceCompleted;
             }
         }
         private bool _isRaceCompleted;
+
+        public bool IsRaceRunning
+        {
+            get => _isRaceRunning;
+            private set => SetProperty(ref _isRaceRunning, value);
+        }
+        private bool _isRaceRunning = false;
 
         #region Execute Command Methods
 
@@ -112,7 +118,7 @@ namespace TrainRacer
         {
             SelectedTrains.Clear();
             RaceResults.Clear();
-            foreach (var train in AvailableTrains)
+            foreach (ITrain? train in AvailableTrains)
             {
                 train.DistanceTraveled = 0;
             }
