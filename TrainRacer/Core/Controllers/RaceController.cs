@@ -15,6 +15,7 @@ public class RaceController : IRaceController
     private readonly IEnumerable<IDriver> _availableDrivers;
     private ITrack? _track;
     private int _trainCount;
+    private DateTime _lastFinishTime;
 
     public RaceController(IEnumerable<IDriver> availableDrivers)
     {
@@ -32,9 +33,9 @@ public class RaceController : IRaceController
         _trainCount = trains.Count();
         _results.Clear();
         _stopwatch.Restart();
-        foreach (var train in trains)
+        foreach (ITrain? train in trains)
         {
-            var driverService = new TrainDriverService(train, 100, _availableDrivers);
+            TrainDriverService? driverService = new(train, 100, _availableDrivers);
 
             driverService.DistanceUpdated += OnDistanceUpdated;
 
@@ -44,24 +45,57 @@ public class RaceController : IRaceController
 
     private void OnDistanceUpdated(object? sender, DistanceUpdatedEventArgs e)
     {
-        if (e.Train != null &&
-            IsTrainFinished(e.Train) &&
-            sender is ITrainDriverService driverService)
+        if (e.Train == null
+            || sender is not ITrainDriverService driverService)
         {
-            driverService.Dispose();
-            var result = new RaceResult()
-            {
-                Train = e.Train,
-                FinishTime = _stopwatch.Elapsed
-            };
-            _results.Add(result);
-            RaceUpdated?.Invoke(this, new RaceUpdatedEventArgs() { RaceResult = result });
-
-            if (IsRaceComplete())
-            {
-                FinishRace();
-            }
+            return;
         }
+
+        if (IsTrainFinished(e.Train))
+        {
+            _lastFinishTime = DateTime.Now;
+
+            driverService.Dispose();
+            ReportFinishedTrain(e.Train);
+        }
+        else
+        {
+            if (_results.Count == 0 ||
+                DateTime.Now - _lastFinishTime <= TimeSpan.FromSeconds(10))
+            {
+                return;
+            }
+            driverService.StopTrain();
+            driverService.Dispose();
+
+            ReportLateTrain(e.Train);
+        }
+
+        if (IsRaceComplete())
+        {
+            FinishRace();
+        }
+    }
+
+    private void ReportFinishedTrain(ITrain train)
+    {
+        RaceResult result = new()
+        {
+            Train = train,
+            FinishTime = _stopwatch.Elapsed
+        };
+        _results.Add(result);
+        RaceUpdated?.Invoke(this, new RaceUpdatedEventArgs() { RaceResult = result });
+    }
+
+    private void ReportLateTrain(ITrain train)
+    {
+        RaceResult result = new()
+        {
+            Train = train
+        };
+        _results.Add(result);
+        RaceUpdated?.Invoke(this, new RaceUpdatedEventArgs() { RaceResult = result });
     }
 
     private bool IsTrainFinished(ITrain train)

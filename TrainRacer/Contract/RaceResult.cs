@@ -9,7 +9,7 @@ namespace TrainRacer.Contract
             get; init;
         }
 
-        public TimeSpan FinishTime
+        public TimeSpan? FinishTime
         {
             get; init;
         }
