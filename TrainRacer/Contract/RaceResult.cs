@@ -2,7 +2,7 @@
 
 namespace TrainRacer.Contract
 {
-    public struct RaceResult
+    public record struct RaceResult
     {
         public ITrain Train
         {

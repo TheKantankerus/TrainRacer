@@ -3,16 +3,106 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:TrainRacer"
+        xmlns:conv="clr-namespace:TrainRacer.UI.Converters"
+        xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+        xmlns:local="clr-namespace:TrainRacer" 
+        xmlns:componentmodel="clr-namespace:System.ComponentModel;assembly=WindowsBase"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="Train Racer"
+        Height="450" 
+        Width="800"
+        Icon="UI/Images/icon.png">
+    <Window.Resources>
+        <ResourceDictionary>
+            <conv:TrainImageConverter x:Key="TrainImageConverter"/>
+            <conv:TrimWidthConverter x:Key="TrimWidthConverter"/>
+            <CollectionViewSource x:Key="SortedTrains" Source="{Binding AvailableTrains}">
+                <CollectionViewSource.SortDescriptions>
+                    <componentmodel:SortDescription PropertyName="Name" Direction="Ascending"/>
+                </CollectionViewSource.SortDescriptions>
+            </CollectionViewSource>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Styles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
     <Grid>
-        <ListBox ItemsSource="{Binding SelectedTrains}">
-            <ListBox.ItemTemplate>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition x:Name="RaceTrackColumn"/>
+            <ColumnDefinition Width="auto"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="auto"/>
+        </Grid.RowDefinitions>
+
+        <ListView ItemsSource="{Binding Source={StaticResource SortedTrains}}"
+                 Grid.Column="0"
+                 Margin="5">
+            <ListView.ItemTemplate>
                 <DataTemplate>
-                    <ProgressBar Style="{DynamicResource TrainProgressBarStyle}"/>
+                    <ToggleButton Style="{DynamicResource TrainSelectionToggleButtonStyle}">
+                        <i:Interaction.Triggers>
+                            <i:EventTrigger EventName="Checked">
+                                <i:InvokeCommandAction Command="{Binding DataContext.TrainSelectedCommand, RelativeSource={RelativeSource AncestorLevel=1, AncestorType=Window,Mode=FindAncestor}}" CommandParameter="{Binding}"/>
+                            </i:EventTrigger>
+                            <i:EventTrigger EventName="Unchecked">
+                                <i:InvokeCommandAction Command="{Binding DataContext.TrainDeselectedCommand,RelativeSource={RelativeSource AncestorLevel=1, AncestorType=Window,Mode=FindAncestor}}" CommandParameter="{Binding}"/>
+                            </i:EventTrigger>
+                        </i:Interaction.Triggers>
+                    </ToggleButton>
                 </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
+            </ListView.ItemTemplate>
+        </ListView>
+
+        <ListView ItemsSource="{Binding SelectedTrains}"
+                 Grid.Column="1"
+                 IsHitTestVisible="False"
+                 Name="RaceTrackListBox"
+                 Margin="5">
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <Slider Style="{DynamicResource RaceTrackSliderStyle}"
+                            Minimum="0"
+                            Maximum="{Binding DataContext.SelectedTrack.Length, RelativeSource={RelativeSource Mode=FindAncestor, AncestorLevel=1,AncestorType=Window}}"
+                            Value="{Binding DistanceTraveled}"
+                            Width="{Binding ElementName=RaceTrackListBox, Path=ActualWidth, Converter={StaticResource TrimWidthConverter}}"
+                            Margin="50,10,0,10"/>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+
+        <DataGrid ItemsSource="{Binding RaceResults}"
+                  Grid.Column="2"
+                  AutoGenerateColumns="False"
+                  Margin="5">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Train" Binding="{Binding Train.Name}"/>
+                <DataGridTextColumn Header="Finish Time" Binding="{Binding FinishTime}"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <TextBlock Grid.Row="1"
+                       Grid.ColumnSpan="3"
+                       Text="{Binding ErrorMessage}"
+                       Visibility="{Binding IsErrorMessageVisible, Converter={StaticResource BoolToVisConverter}}"
+                   Foreground="Red"
+                   FontSize="18"
+                   Margin="5,0"/>
+
+        <StackPanel Orientation="Horizontal"
+                    Grid.Row="2">            
+        <Button 
+                Command="{Binding StartRaceCommand}"
+                Content="Start Race"
+                Style="{DynamicResource ControlButtonStyle}"/>
+
+            <Button Command="{Binding ResetRaceCommand}"
+                    Content="Reset Race"
+                    Style="{DynamicResource ControlButtonStyle}"
+                    Visibility="{Binding IsRaceCompleted, Converter={StaticResource BoolToVisConverter}}"/>
+        </StackPanel>
     </Grid>
 </Window>
