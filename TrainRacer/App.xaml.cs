@@ -3,10 +3,10 @@ using Prism.Ioc;
 using System.Windows;
 using TrainRacer.Contract;
 using TrainRacer.Core.Controllers;
-using TrainRacer.Core.Models.Drivers;
 using TrainRacer.Core.Models.Tracks;
 using TrainRacer.Core.Models.Trains;
 using TrainRacer.Core.Services;
+using TrainRacer.Core.Services.Drivers;
 
 namespace TrainRacer
 {
