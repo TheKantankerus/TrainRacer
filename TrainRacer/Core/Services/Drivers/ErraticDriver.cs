@@ -2,7 +2,7 @@
 using TrainRacer.Contract;
 using TrainRacer.Contract.Enums;
 
-namespace TrainRacer.Core.Models.Drivers
+namespace TrainRacer.Core.Services.Drivers
 {
     public class ErraticDriver : BaseDriver
     {

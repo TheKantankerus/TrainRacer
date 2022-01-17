@@ -2,7 +2,7 @@
 using TrainRacer.Contract.Enums;
 using TrainRacer.Contract.Extensions;
 
-namespace TrainRacer.Core.Models.Drivers
+namespace TrainRacer.Core.Services.Drivers
 {
     public abstract class BaseDriver : IDriver
     {
